@@ -1,0 +1,41 @@
+rarities:
+  COMMON:
+    display: '&f&lCOMMON'
+    weight: 1
+  FANCY:
+    display: '&#CA22D6&lFANCY'
+    weight: 2
+  DIVINE:
+    display: '&#22D6A9&lDIVINE'
+    weight: 3
+
+tags:
+  NEWBIE:
+    display: <gray>NEWBIE</gray>
+    rarity: COMMON
+    icon: NAME_TAG
+    price: 0
+    description:
+      - '&7 Tag gratis untuk player!'
+  SAWIT:
+    display: <gradient:#6CE32B:#69B541><b>SAWIT</b></gradient>
+    rarity: FANCY
+    icon: NAME_TAG
+    price: 50
+    description:
+      - <gray> Panen sawit</gray>
+  CAV+++:
+    display: <gradient:gold:yellow>CAV+++</gradient>
+    rarity: DIVINE
+    icon: NAME_TAG
+    permission: test.CAV+++
+    description:
+      - <yellow> Tag khusus owner tercinta kita yaitu Cavry</yellow>
+  Top_1_Vote:
+    display: <gradient:#54C7B5:#29E3C5><b>TOP </b>#1 <b>VOTE</b></gradient>
+    rarity: DIVINE
+    icon: NAME_TAG
+    permission: nexustags.tag.Top_1_Vote
+    description:
+      - '&7 Tag ini hanya untuk player yang mencapai'
+      - '&7 Top 1 Vote bulanan NexusOne!'
