@@ -17,8 +17,6 @@ import java.util.*;
 
 public class GUIListener implements Listener, InventoryHolder {
     private final NexusTags plugin;
-
-    // Variabel static agar data filter dan halaman tidak reset saat GUI ditutup
     private static final Map<UUID, Integer> filterIndex = new HashMap<>();
     private static final Map<UUID, Integer> currentPage = new HashMap<>();
     private static final Map<UUID, String> pendingPurchase = new HashMap<>();
@@ -46,7 +44,6 @@ public class GUIListener implements Listener, InventoryHolder {
         String title = guiSec.getString("title", "TAG MENU").replace("%page_format%", pageFormat);
 
         Inventory inv = Bukkit.createInventory(this, rows * 9, Utils.parse(player, title));
-
         renderFiller(inv, rows, guiSec, player);
         renderStaticItems(inv, guiSec, player);
 
@@ -77,53 +74,33 @@ public class GUIListener implements Listener, InventoryHolder {
         player.openInventory(inv);
     }
 
-    public void openConfirmationGUI(Player player, String tagId) {
-        ConfigurationSection conf = plugin.getConfirmationConfig().getConfigurationSection("gui");
-        Inventory inv = Bukkit.createInventory(this, conf.getInt("rows", 3) * 9, Utils.parse(player, conf.getString("title")));
+    public void openTagEditor(Player player, TagEditorSession session) {
+        FileConfiguration conf = plugin.getEditorConfig();
+        int rows = conf.getInt("gui.rows", 4);
+        String title = conf.getString("gui.title", "Editor").replace("%tag_id%", session.tagId);
 
-        ItemStack filler = Utils.createItem(player, conf.getString("filler.material"), conf.getString("filler.name"), null);
-        for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, filler);
+        Inventory inv = Bukkit.createInventory(this, rows * 9, Utils.parse(player, title));
 
-        ConfigurationSection tagSec = plugin.getTagsConfig().getConfigurationSection("tags." + tagId);
-        String display = tagSec.getString("display", tagId);
-        // Memanggil preview lengkap (format chat)
-        String preview = PlaceholderAPI.setPlaceholders(player, "%nexustags_preview_" + tagId + "%");
+        inv.setItem(conf.getInt("gui.preview_slot"), Utils.createItem(player, session.icon, session.display, session.description));
 
-        inv.setItem(conf.getInt("tag_preview_slot"), Utils.createItem(player, tagSec.getString("icon", "PAPER"), display, tagSec.getStringList("description")));
+        setupEditorButton(inv, "edit_display", session.display, player);
+        setupEditorButton(inv, "edit_icon", session.icon, player);
+        setupEditorButton(inv, "edit_rarity", session.rarity, player);
+        setupEditorButton(inv, "edit_price", String.valueOf(session.price), player);
+        setupEditorButton(inv, "edit_perm", session.permission.isEmpty() ? "none" : session.permission, player);
+        setupEditorButton(inv, "edit_description", "", player);
+        setupEditorButton(inv, "save_button", "", player);
+        setupEditorButton(inv, "cancel_button", "", player);
 
-        List<String> confirmLore = new ArrayList<>();
-        for (String s : conf.getStringList("confirm.lore")) {
-            confirmLore.add(s.replace("%tag_display%", display)
-                    .replace("%price%", String.valueOf(tagSec.getInt("price")))
-                    .replace("%preview%", preview));
-        }
-        inv.setItem(conf.getInt("confirm.slot"), Utils.createItem(player, conf.getString("confirm.material"), conf.getString("confirm.name"), confirmLore));
-        inv.setItem(conf.getInt("cancel.slot"), Utils.createItem(player, conf.getString("cancel.material"), conf.getString("cancel.name"), conf.getStringList("cancel.lore")));
-
-        pendingPurchase.put(player.getUniqueId(), tagId);
         player.openInventory(inv);
     }
 
-    public void openTagEditor(Player player, TagEditorSession session) {
-        Inventory inv = Bukkit.createInventory(null, 36, Utils.parse("&0Editor: " + session.tagId));
-
-        // Item Preview
-        inv.setItem(13, Utils.createItem(player, session.icon, session.display, session.description));
-
-        // Tombol Edit Display
-        inv.setItem(10, Utils.createItem(player, "NAME_TAG", "&eUbah Display", List.of("&7Sekarang: " + session.display)));
-
-        // Tombol Edit Price
-        inv.setItem(11, Utils.createItem(player, "GOLD_INGOT", "&eUbah Harga", List.of("&7Sekarang: " + session.price, "&8(-1 untuk hanya perm)")));
-
-        // Tombol Edit Permission
-        inv.setItem(12, Utils.createItem(player, "BARRIER", "&eUbah Permission", List.of("&7Sekarang: " + session.permission, "&8(Kosongkan untuk hanya harga)")));
-
-        // Tombol Simpan & Buang
-        inv.setItem(30, Utils.createItem(player, "RED_WOOL", "&cDiscard Changes", null));
-        inv.setItem(32, Utils.createItem(player, "LIME_WOOL", "&aConfirm & Save", null));
-
-        player.openInventory(inv);
+    private void setupEditorButton(Inventory inv, String key, String current, Player p) {
+        ConfigurationSection s = plugin.getEditorConfig().getConfigurationSection("gui.items." + key);
+        if (s == null) return;
+        List<String> lore = new ArrayList<>();
+        for (String line : s.getStringList("lore")) lore.add(line.replace("%current%", current));
+        inv.setItem(s.getInt("slot"), Utils.createItem(p, s.getString("material"), s.getString("name"), lore));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -134,46 +111,93 @@ public class GUIListener implements Listener, InventoryHolder {
         int slot = e.getRawSlot();
         UUID uuid = p.getUniqueId();
 
-        // Cek Judul Dinamis Konfirmasi
         String currentTitle = e.getView().getTitle();
         String formattedConfTitle = Utils.applyLegacy(p, plugin.getConfirmationConfig().getString("gui.title"));
 
+        // GUI Konfirmasi Pembelian
         if (currentTitle.equals(formattedConfTitle)) {
             String tid = pendingPurchase.get(uuid);
             if (tid == null) return;
             ConfigurationSection conf = plugin.getConfirmationConfig().getConfigurationSection("gui");
-
             if (slot == conf.getInt("confirm.slot")) {
                 processPurchase(p, tid);
                 pendingPurchase.remove(uuid);
             } else if (slot == conf.getInt("cancel.slot")) {
                 pendingPurchase.remove(uuid);
-                openGUI(p, 0);
                 p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
+                openGUI(p, 0);
             }
             return;
         }
 
+        // GUI Editor
+        TagEditorSession session = plugin.getEditorSessions().get(uuid);
+        if (session != null && currentTitle.contains("Editor")) {
+            FileConfiguration conf = plugin.getEditorConfig();
+            p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
+
+            if (slot == conf.getInt("gui.items.edit_display.slot")) {
+                session.lastEditAction = "DISPLAY";
+                p.closeInventory();
+                p.sendMessage(Utils.parse("&eKetik display name baru di chat:"));
+            } else if (slot == conf.getInt("gui.items.edit_icon.slot")) {
+                session.lastEditAction = "ICON";
+                p.closeInventory();
+                p.sendMessage(Utils.parse("&eKetik nama Material baru (Contoh: NAME_TAG):"));
+            } else if (slot == conf.getInt("gui.items.edit_rarity.slot")) {
+                session.lastEditAction = "RARITY";
+                p.closeInventory();
+                p.sendMessage(Utils.parse("&eKetik Rarity baru (Contoh: EPIC):"));
+            } else if (slot == conf.getInt("gui.items.edit_price.slot")) {
+                session.lastEditAction = "PRICE";
+                p.closeInventory();
+                p.sendMessage(Utils.parse("&eKetik harga baru di chat (-1 untuk nonaktif):"));
+            } else if (slot == conf.getInt("gui.items.edit_perm.slot")) {
+                session.lastEditAction = "PERM";
+                p.closeInventory();
+                p.sendMessage(Utils.parse("&eKetik permission baru (atau 'none'):"));
+            } else if (slot == conf.getInt("gui.items.edit_description.slot")) {
+                session.lastEditAction = "LORE";
+                p.closeInventory();
+                p.sendMessage(Utils.parse("&eKetik lore baru (gunakan ';' untuk baris baru):"));
+            } else if (slot == conf.getInt("gui.items.save_button.slot")) {
+                saveTagToConfig(session);
+                plugin.getEditorSessions().remove(uuid);
+                p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 2f);
+                p.closeInventory();
+                p.sendMessage(Utils.parse("&aTag berhasil disimpan!"));
+            } else if (slot == conf.getInt("gui.items.cancel_button.slot")) {
+                plugin.getEditorSessions().remove(uuid);
+                p.playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1f, 1f);
+                p.closeInventory();
+                p.sendMessage(Utils.parse("&cPerubahan dibatalkan."));
+            }
+            return;
+        }
+
+        // GUI Utama
         ConfigurationSection gui = plugin.getGuiConfig().getConfigurationSection("gui");
-        if (slot == gui.getInt("controls.close.slot")) p.closeInventory();
-        else if (slot == gui.getInt("navigation.previous_page.slot") && currentPage.getOrDefault(uuid, 0) > 0) {
+        if (slot == gui.getInt("controls.close.slot")) {
+            p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
+            p.closeInventory();
+        } else if (slot == gui.getInt("navigation.previous_page.slot") && currentPage.getOrDefault(uuid, 0) > 0) {
+            p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
             currentPage.put(uuid, currentPage.get(uuid) - 1);
             renderGUI(p, currentPage.get(uuid));
-            p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
         } else if (slot == gui.getInt("navigation.next_page.slot")) {
             ConfigurationSection tagsSec = plugin.getTagsConfig().getConfigurationSection("tags");
             int mode = filterIndex.getOrDefault(uuid, 0);
             List<String> keys = getSortedKeys(p, tagsSec, plugin.getDbManager().getUnlockedTags(uuid), mode);
             List<Integer> slots = getAvailableSlots(gui.getInt("start_slot"), gui.getInt("end_slot"), gui.getInt("rows"));
             if ((currentPage.getOrDefault(uuid, 0) + 1) * slots.size() < keys.size()) {
+                p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
                 currentPage.put(uuid, currentPage.get(uuid) + 1);
                 renderGUI(p, currentPage.get(uuid));
-                p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
             }
         } else if (slot == gui.getInt("controls.filter_hopper.slot")) {
+            p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
             filterIndex.put(uuid, (filterIndex.getOrDefault(uuid, 0) + 1) % 4);
             currentPage.put(uuid, 0);
-            p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
             renderGUI(p, 0);
         } else {
             handleTagSelection(p, slot, currentPage.getOrDefault(uuid, 0), gui);
@@ -204,11 +228,13 @@ public class GUIListener implements Listener, InventoryHolder {
                 p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1.2f);
                 for (String s : plugin.getMsgsConfig().getStringList("messages.tag_equipped")) p.sendMessage(Utils.parse(p, s.replace("%tag%", display)));
                 renderGUI(p, page);
-            } else if (tagsSec.contains(tid + ".price")) {
-                int pr = tagsSec.getInt(tid + ".price", 0);
+            } else if (tagsSec.contains(tid + ".price") && tagsSec.getInt(tid + ".price") >= 0) {
+                int pr = tagsSec.getInt(tid + ".price");
                 double bal = Double.parseDouble(PlaceholderAPI.setPlaceholders(p, "%nexogems_balance%"));
-                if (bal >= pr) openConfirmationGUI(p, tid);
-                else {
+                if (bal >= pr) {
+                    p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
+                    openConfirmationGUI(p, tid);
+                } else {
                     p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
                     for (String s : plugin.getMsgsConfig().getStringList("messages.buy_failed")) p.sendMessage(Utils.parse(p, s.replace("%missing%", String.valueOf(pr - bal))));
                 }
@@ -238,6 +264,15 @@ public class GUIListener implements Listener, InventoryHolder {
         }
     }
 
+    private boolean checkAccess(Player p, ConfigurationSection t, String k, List<String> u) {
+        String perm = t.getString(k + ".permission", "");
+        int price = t.getInt(k + ".price", 0);
+        if (u.contains(k)) return true;
+        if (price == 0 && perm.isEmpty()) return true;
+        if (!perm.isEmpty() && p.hasPermission(perm)) return true;
+        return false;
+    }
+
     private void renderNavigation(Inventory inv, int page, int size, int ipp, ConfigurationSection s, Player p) {
         ConfigurationSection c = s.getConfigurationSection("controls.filter_hopper");
         int m = filterIndex.getOrDefault(p.getUniqueId(), 0);
@@ -264,10 +299,6 @@ public class GUIListener implements Listener, InventoryHolder {
             return (r != 0) ? r : a.compareToIgnoreCase(b);
         });
         return k;
-    }
-
-    private boolean checkAccess(Player p, ConfigurationSection t, String k, List<String> u) {
-        return (t.contains(k + ".permission") && p.hasPermission(t.getString(k + ".permission"))) || u.contains(k) || (t.getInt(k + ".price", -1) == 0);
     }
 
     private List<String> getLoreTemplate(boolean active, boolean unlocked, ConfigurationSection t, String k, Player p) {
@@ -316,17 +347,31 @@ public class GUIListener implements Listener, InventoryHolder {
         cfg.set(path + ".icon", s.icon);
         cfg.set(path + ".description", s.description.isEmpty() ? List.of("&7Default description") : s.description);
         cfg.set(path + ".rarity", s.rarity);
-
         if (s.price == -1) cfg.set(path + ".price", null);
         else cfg.set(path + ".price", s.price);
-
         if (s.permission.isEmpty()) cfg.set(path + ".permission", null);
         else cfg.set(path + ".permission", s.permission);
-
         plugin.getConfigManager().saveTagsConfig();
         plugin.reloadPlugin();
     }
 
     private boolean isEdgeSlot(int s, int r) { int c = s % 9; int row = s / 9; return c == 0 || c == 8 || row == 0 || row == r - 1; }
     private List<Integer> getAvailableSlots(int st, int e, int r) { List<Integer> l = new ArrayList<>(); for (int i = st; i <= e; i++) if (!isEdgeSlot(i, r)) l.add(i); return l; }
+
+    public void openConfirmationGUI(Player player, String tagId) {
+        ConfigurationSection conf = plugin.getConfirmationConfig().getConfigurationSection("gui");
+        Inventory inv = Bukkit.createInventory(this, conf.getInt("rows", 3) * 9, Utils.parse(player, conf.getString("title")));
+        ItemStack filler = Utils.createItem(player, conf.getString("filler.material"), conf.getString("filler.name"), null);
+        for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, filler);
+        ConfigurationSection tagSec = plugin.getTagsConfig().getConfigurationSection("tags." + tagId);
+        String display = tagSec.getString("display", tagId);
+        String preview = PlaceholderAPI.setPlaceholders(player, "%nexustags_preview_" + tagId + "%");
+        inv.setItem(conf.getInt("tag_preview_slot"), Utils.createItem(player, tagSec.getString("icon", "PAPER"), display, tagSec.getStringList("description")));
+        List<String> confirmLore = new ArrayList<>();
+        for (String s : conf.getStringList("confirm.lore")) confirmLore.add(s.replace("%tag_display%", display).replace("%price%", String.valueOf(tagSec.getInt("price"))).replace("%preview%", preview));
+        inv.setItem(conf.getInt("confirm.slot"), Utils.createItem(player, conf.getString("confirm.material"), conf.getString("confirm.name"), confirmLore));
+        inv.setItem(conf.getInt("cancel.slot"), Utils.createItem(player, conf.getString("cancel.material"), conf.getString("cancel.name"), conf.getStringList("cancel.lore")));
+        pendingPurchase.put(player.getUniqueId(), tagId);
+        player.openInventory(inv);
+    }
 }

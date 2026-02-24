@@ -72,6 +72,15 @@ public class TagExpansion extends PlaceholderExpansion {
             return String.valueOf(count);
         }
 
+        if (params.equalsIgnoreCase("total_tag")) {
+            return String.valueOf(getTotalTags());
+        }
+
+        // %nexustags_total_tag_formatted% - Total tag dengan format (1,287)
+        if (params.equalsIgnoreCase("total_tag_formatted")) {
+            return NumberFormat.getInstance(Locale.US).format(getTotalTags());
+        }
+
         // %nexustags_rarity_<tag_id>%
         if (params.startsWith("rarity_")) {
             String tagId = params.replace("rarity_", "");
@@ -89,4 +98,11 @@ public class TagExpansion extends PlaceholderExpansion {
 
         return null;
     }
+
+    private int getTotalTags() {
+        ConfigurationSection section = plugin.getTagsConfig().getConfigurationSection("tags");
+        if (section == null) return 0;
+        return section.getKeys(false).size();
+    }
+
 }

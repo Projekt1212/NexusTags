@@ -7,6 +7,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.Bukkit;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -32,10 +33,12 @@ public class NexusTags extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(guiListener, this);
         getServer().getPluginManager().registerEvents(this, this);
 
+        // Registrasi PlaceholderAPI
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new TagExpansion(this).register();
         }
-        getLogger().info("NexusTags v1.0 Enabled!");
+
+        getLogger().info("NexusTags v1.0 Enabled with New Placeholders!");
     }
 
     @Override
@@ -51,11 +54,24 @@ public class NexusTags extends JavaPlugin implements Listener {
         e.setCancelled(true);
         String msg = e.getMessage();
 
-        if (session.lastEditAction.equals("DISPLAY")) session.display = msg;
-        else if (session.lastEditAction.equals("PRICE")) {
-            try { session.price = Integer.parseInt(msg); } catch (Exception ex) { e.getPlayer().sendMessage("§cInput harus angka!"); }
+        if (session.lastEditAction.equals("DISPLAY")) {
+            session.display = msg;
+        } else if (session.lastEditAction.equals("ICON")) {
+            session.icon = msg.toUpperCase();
+        } else if (session.lastEditAction.equals("RARITY")) {
+            session.rarity = msg.toUpperCase();
+        } else if (session.lastEditAction.equals("PRICE")) {
+            try {
+                session.price = Integer.parseInt(msg);
+            } catch (Exception ex) {
+                e.getPlayer().sendMessage("§cInput harus angka!");
+                return;
+            }
+        } else if (session.lastEditAction.equals("PERM")) {
+            session.permission = msg.equalsIgnoreCase("none") ? "" : msg;
+        } else if (session.lastEditAction.equals("LORE")) {
+            session.description = Arrays.asList(msg.split(";"));
         }
-        else if (session.lastEditAction.equals("PERM")) session.permission = msg.equalsIgnoreCase("none") ? "" : msg;
 
         session.lastEditAction = "";
         Bukkit.getScheduler().runTask(this, () -> guiListener.openTagEditor(e.getPlayer(), session));
@@ -82,4 +98,5 @@ public class NexusTags extends JavaPlugin implements Listener {
     public FileConfiguration getGuiConfig() { return configManager.getGuiConfig(); }
     public FileConfiguration getMsgsConfig() { return configManager.getMsgsConfig(); }
     public FileConfiguration getConfirmationConfig() { return configManager.getConfirmationConfig(); }
+    public FileConfiguration getEditorConfig() { return configManager.getEditorConfig(); }
 }

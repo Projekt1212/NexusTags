@@ -1,0 +1,70 @@
+# editor.yml
+gui:
+  title: "&0Tag Editor: %tag_id%"
+  rows: 4
+  # Slot 13 adalah preview item tag
+  preview_slot: 13
+
+  items:
+    edit_display:
+      slot: 10
+      material: NAME_TAG
+      name: "&eUbah Display"
+      lore:
+        - "&7Sekarang: &f%current%"
+        - ""
+        - "&b&l[!] &bKlik untuk mengubah via chat"
+    edit_price:
+      slot: 11
+      material: GOLD_INGOT
+      name: "&eUbah Harga"
+      lore:
+        - "&7Sekarang: &6%current% Gems"
+        - "&8(-1 untuk menonaktifkan harga)"
+        - ""
+        - "&b&l[!] &bKlik untuk mengubah via chat"
+    edit_perm:
+      slot: 12
+      material: BARRIER
+      name: "&eUbah Permission"
+      lore:
+        - "&7Sekarang: &f%current%"
+        - "&8(Ketik 'none' untuk menghapus)"
+        - ""
+        - "&b&l[!] &bKlik untuk mengubah via chat"
+    edit_description:
+      slot: 19
+      material: BOOK
+      name: "&eUbah Lore/Deskripsi"
+      lore:
+        - "&7Klik untuk mereset lore dan"
+        - "&7memasukkan lore baru via chat."
+        - "&8(Gunakan ';' untuk baris baru)"
+    edit_icon:
+      slot: 20
+      material: NAME_TAG
+      name: "&eUbah Icon Material"
+      lore:
+        - "&7Sekarang: &f%current%"
+        - ""
+        - "&b&l[!] &bKlik untuk mengubah via chat"
+    edit_rarity:
+      slot: 21
+      material: NETHER_STAR
+      name: "&eUbah Rarity"
+      lore:
+        - "&7Sekarang: &f%current%"
+        - ""
+        - "&b&l[!] &bKlik untuk mengubah via chat"
+    save_button:
+      slot: 32
+      material: LIME_WOOL
+      name: "&a&lSIMPAN PERUBAHAN"
+      lore:
+        - "&7Klik untuk menyimpan ke tags.yml"
+    cancel_button:
+      slot: 30
+      material: RED_WOOL
+      name: "&c&lBATALKAN"
+      lore:
+        - "&7Klik untuk membuang perubahan"

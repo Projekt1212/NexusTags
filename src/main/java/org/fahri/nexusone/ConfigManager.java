@@ -7,8 +7,8 @@ import java.io.IOException;
 
 public class ConfigManager {
     private final NexusTags plugin;
-    private FileConfiguration tagsConfig, guiConfig, msgsConfig, confirmationConfig;
-    private File tagsFile, guiFile, msgsFile, confirmationFile;
+    private FileConfiguration tagsConfig, guiConfig, msgsConfig, confirmationConfig, editorConfig;
+    private File tagsFile, guiFile, msgsFile, confirmationFile, editorFile;
 
     public ConfigManager(NexusTags plugin) {
         this.plugin = plugin;
@@ -19,11 +19,13 @@ public class ConfigManager {
         guiFile = new File(plugin.getDataFolder(), "gui.yml");
         msgsFile = new File(plugin.getDataFolder(), "messages.yml");
         confirmationFile = new File(plugin.getDataFolder(), "confirmation.yml");
+        editorFile = new File(plugin.getDataFolder(), "editor.yml");
 
         if (!tagsFile.exists()) plugin.saveResource("tags.yml", false);
         if (!guiFile.exists()) plugin.saveResource("gui.yml", false);
         if (!msgsFile.exists()) plugin.saveResource("messages.yml", false);
         if (!confirmationFile.exists()) plugin.saveResource("confirmation.yml", false);
+        if (!editorFile.exists()) plugin.saveResource("editor.yml", false);
 
         reloadConfigs();
     }
@@ -33,6 +35,7 @@ public class ConfigManager {
         guiConfig = YamlConfiguration.loadConfiguration(guiFile);
         msgsConfig = YamlConfiguration.loadConfiguration(msgsFile);
         confirmationConfig = YamlConfiguration.loadConfiguration(confirmationFile);
+        editorConfig = YamlConfiguration.loadConfiguration(editorFile);
     }
 
     public void saveTagsConfig() {
@@ -47,4 +50,5 @@ public class ConfigManager {
     public FileConfiguration getGuiConfig() { return guiConfig; }
     public FileConfiguration getMsgsConfig() { return msgsConfig; }
     public FileConfiguration getConfirmationConfig() { return confirmationConfig; }
+    public FileConfiguration getEditorConfig() { return editorConfig; }
 }
