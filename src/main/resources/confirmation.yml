@@ -1,0 +1,36 @@
+gui:
+  title: "&8ᴋᴏɴғɪʀᴍᴀsɪ"
+  rows: 3
+  tag_preview_slot: 13
+
+  confirm:
+    slot: 11
+    material: "LIME_STAINED_GLASS_PANE"
+    name: "&a&lKonfirmasi Pembelian"
+    lore:
+      - "&8ᴘᴜʀᴄʜᴀsᴇ"
+      - ""
+      - "&7 Tag yang ingin dibeli:"
+      - "&f %tag_display%"
+      - ""
+      - "&7 Display Tag:"
+      - "&7 %preview%"
+      - ""
+      - "&7 Harga: &d%price% NexusBits"
+      - ""
+      - "&e ᴋʟɪᴋ ᴜɴᴛᴜᴋ ᴍᴇɴɢᴏɴғɪʀᴍᴀsɪ ᴘᴇᴍʙᴇʟɪᴀɴ!"
+      - ""
+
+  cancel:
+    slot: 15
+    material: "RED_STAINED_GLASS_PANE"
+    name: "&c&lBatal"
+    lore:
+      - "&8ᴘᴜʀᴄʜᴀsᴇ"
+      - ""
+      - "&e ᴋʟɪᴋ ᴜɴᴛᴜᴋ ᴍᴇᴍʙᴀᴛᴀʟᴋᴀɴ ᴘᴇᴍʙᴇʟɪᴀɴ!"
+      - ""
+
+  filler:
+    material: "AIR"
+    name: " "
