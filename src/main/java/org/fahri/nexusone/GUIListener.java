@@ -10,20 +10,29 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemStack;
 import me.clip.placeholderapi.PlaceholderAPI;
 import java.util.*;
 
 public class GUIListener implements Listener, InventoryHolder {
     private final NexusTags plugin;
-    private final Map<UUID, Integer> filterIndex = new HashMap<>(); // 0: All, 1: Owned, 2: Rarity Asc, 3: Rarity Desc
-    private final Map<UUID, Integer> currentPage = new HashMap<>();
+
+    // Variabel static agar data filter dan halaman tidak reset saat GUI ditutup
+    private static final Map<UUID, Integer> filterIndex = new HashMap<>();
+    private static final Map<UUID, Integer> currentPage = new HashMap<>();
+    private static final Map<UUID, String> pendingPurchase = new HashMap<>();
 
     public GUIListener(NexusTags plugin) { this.plugin = plugin; }
+
     @Override public Inventory getInventory() { return null; }
 
+    public static Map<UUID, Integer> getFilterIndex() { return filterIndex; }
+    public static Map<UUID, Integer> getCurrentPage() { return currentPage; }
+
     public void openGUI(Player player, int page) {
-        currentPage.put(player.getUniqueId(), page);
-        filterIndex.putIfAbsent(player.getUniqueId(), 0);
+        UUID uuid = player.getUniqueId();
+        filterIndex.putIfAbsent(uuid, 0);
+        currentPage.put(uuid, page);
         renderGUI(player, page);
     }
 
@@ -35,7 +44,6 @@ public class GUIListener implements Listener, InventoryHolder {
         String pageFormat = guiSec.getString("page_format", " - %page%").replace("%page%", String.valueOf(page + 1));
         String title = guiSec.getString("title", "TAG MENU").replace("%page_format%", pageFormat);
 
-        // Buat inventory baru untuk refresh visual total
         Inventory inv = Bukkit.createInventory(this, rows * 9, Utils.parse(player, title));
 
         renderFiller(inv, rows, guiSec, player);
@@ -58,30 +66,41 @@ public class GUIListener implements Listener, InventoryHolder {
                 String key = keys.get(i);
                 boolean isUnlocked = checkAccess(player, tagsSec, key, unlocked);
                 List<String> loreTemplate = getLoreTemplate(key.equals(active), isUnlocked, tagsSec, key, player);
-                inv.setItem(slots.get(i - start), Utils.createItem(player, tagsSec.getString(key + ".icon", "PAPER"), tagsSec.getString(key + ".display", key), processLore(loreTemplate, tagsSec, key, player)));
+                inv.setItem(slots.get(i - start), Utils.createItem(player,
+                        tagsSec.getString(key + ".icon", "PAPER"),
+                        tagsSec.getString(key + ".display", key),
+                        processLore(loreTemplate, tagsSec, key, player)));
             }
             renderNavigation(inv, page, keys.size(), ipp, guiSec, player);
         }
         player.openInventory(inv);
     }
 
-    private List<String> getSortedKeys(Player p, ConfigurationSection t, List<String> u, int mode) {
-        List<String> keys = new ArrayList<>(t.getKeys(false));
-        if (mode == 1) keys.removeIf(k -> !checkAccess(p, t, k, u));
+    public void openConfirmationGUI(Player player, String tagId) {
+        ConfigurationSection conf = plugin.getConfirmationConfig().getConfigurationSection("gui");
+        Inventory inv = Bukkit.createInventory(this, conf.getInt("rows", 3) * 9, Utils.parse(player, conf.getString("title")));
 
-        keys.sort((a, b) -> {
-            String rA = t.getString(a + ".rarity", "COMMON").toUpperCase();
-            String rB = t.getString(b + ".rarity", "COMMON").toUpperCase();
-            int wA = plugin.getTagsConfig().getInt("rarities." + rA + ".weight", 0);
-            int wB = plugin.getTagsConfig().getInt("rarities." + rB + ".weight", 0);
+        ItemStack filler = Utils.createItem(player, conf.getString("filler.material"), conf.getString("filler.name"), null);
+        for (int i = 0; i < inv.getSize(); i++) inv.setItem(i, filler);
 
-            int res;
-            if (mode == 2) res = Integer.compare(wA, wB);
-            else res = Integer.compare(wB, wA); // Default/Mode 3 (Desc)
+        ConfigurationSection tagSec = plugin.getTagsConfig().getConfigurationSection("tags." + tagId);
+        String display = tagSec.getString("display", tagId);
+        // Memanggil preview lengkap (format chat)
+        String preview = PlaceholderAPI.setPlaceholders(player, "%nexustags_preview_" + tagId + "%");
 
-            return (res != 0) ? res : a.compareToIgnoreCase(b);
-        });
-        return keys;
+        inv.setItem(conf.getInt("tag_preview_slot"), Utils.createItem(player, tagSec.getString("icon", "PAPER"), display, tagSec.getStringList("description")));
+
+        List<String> confirmLore = new ArrayList<>();
+        for (String s : conf.getStringList("confirm.lore")) {
+            confirmLore.add(s.replace("%tag_display%", display)
+                    .replace("%price%", String.valueOf(tagSec.getInt("price")))
+                    .replace("%preview%", preview));
+        }
+        inv.setItem(conf.getInt("confirm.slot"), Utils.createItem(player, conf.getString("confirm.material"), conf.getString("confirm.name"), confirmLore));
+        inv.setItem(conf.getInt("cancel.slot"), Utils.createItem(player, conf.getString("cancel.material"), conf.getString("cancel.name"), conf.getStringList("cancel.lore")));
+
+        pendingPurchase.put(player.getUniqueId(), tagId);
+        player.openInventory(inv);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -90,143 +109,152 @@ public class GUIListener implements Listener, InventoryHolder {
         e.setCancelled(true);
         Player p = (Player) e.getWhoClicked();
         int slot = e.getRawSlot();
-        ConfigurationSection gui = plugin.getGuiConfig().getConfigurationSection("gui");
+        UUID uuid = p.getUniqueId();
 
+        // Cek Judul Dinamis Konfirmasi
+        String currentTitle = e.getView().getTitle();
+        String formattedConfTitle = Utils.applyLegacy(p, plugin.getConfirmationConfig().getString("gui.title"));
+
+        if (currentTitle.equals(formattedConfTitle)) {
+            String tid = pendingPurchase.get(uuid);
+            if (tid == null) return;
+            ConfigurationSection conf = plugin.getConfirmationConfig().getConfigurationSection("gui");
+
+            if (slot == conf.getInt("confirm.slot")) {
+                processPurchase(p, tid);
+                pendingPurchase.remove(uuid);
+            } else if (slot == conf.getInt("cancel.slot")) {
+                pendingPurchase.remove(uuid);
+                openGUI(p, 0);
+                p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
+            }
+            return;
+        }
+
+        ConfigurationSection gui = plugin.getGuiConfig().getConfigurationSection("gui");
         if (slot == gui.getInt("controls.close.slot")) p.closeInventory();
-        else if (slot == gui.getInt("navigation.previous_page.slot") && currentPage.getOrDefault(p.getUniqueId(), 0) > 0) {
-            renderGUI(p, currentPage.get(p.getUniqueId()) - 1);
-            currentPage.put(p.getUniqueId(), currentPage.get(p.getUniqueId()) - 1);
+        else if (slot == gui.getInt("navigation.previous_page.slot") && currentPage.getOrDefault(uuid, 0) > 0) {
+            currentPage.put(uuid, currentPage.get(uuid) - 1);
+            renderGUI(p, currentPage.get(uuid));
+            p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
         } else if (slot == gui.getInt("navigation.next_page.slot")) {
-            renderGUI(p, currentPage.get(p.getUniqueId()) + 1);
-            currentPage.put(p.getUniqueId(), currentPage.get(p.getUniqueId()) + 1);
+            ConfigurationSection tagsSec = plugin.getTagsConfig().getConfigurationSection("tags");
+            int mode = filterIndex.getOrDefault(uuid, 0);
+            List<String> keys = getSortedKeys(p, tagsSec, plugin.getDbManager().getUnlockedTags(uuid), mode);
+            List<Integer> slots = getAvailableSlots(gui.getInt("start_slot"), gui.getInt("end_slot"), gui.getInt("rows"));
+            if ((currentPage.getOrDefault(uuid, 0) + 1) * slots.size() < keys.size()) {
+                currentPage.put(uuid, currentPage.get(uuid) + 1);
+                renderGUI(p, currentPage.get(uuid));
+                p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
+            }
         } else if (slot == gui.getInt("controls.filter_hopper.slot")) {
-            int next = (filterIndex.getOrDefault(p.getUniqueId(), 0) + 1) % 4;
-            filterIndex.put(p.getUniqueId(), next);
-            currentPage.put(p.getUniqueId(), 0);
+            filterIndex.put(uuid, (filterIndex.getOrDefault(uuid, 0) + 1) % 4);
+            currentPage.put(uuid, 0);
             p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1f);
             renderGUI(p, 0);
         } else {
-            handleTagSelection(p, slot, currentPage.getOrDefault(p.getUniqueId(), 0), gui);
+            handleTagSelection(p, slot, currentPage.getOrDefault(uuid, 0), gui);
         }
     }
 
     private void handleTagSelection(Player p, int slot, int page, ConfigurationSection guiSec) {
         ConfigurationSection tagsSec = plugin.getTagsConfig().getConfigurationSection("tags");
         List<String> u = plugin.getDbManager().getUnlockedTags(p.getUniqueId());
-
-        // Ambil Tag yang sedang aktif saat ini
         String activeTag = plugin.getDbManager().getActiveTagSync(p.getUniqueId());
-
-        int m = filterIndex.getOrDefault(p.getUniqueId(), 0);
-        List<String> filtered = getSortedKeys(p, tagsSec, u, m);
+        List<String> filtered = getSortedKeys(p, tagsSec, u, filterIndex.getOrDefault(p.getUniqueId(), 0));
         List<Integer> slots = getAvailableSlots(guiSec.getInt("start_slot"), guiSec.getInt("end_slot"), guiSec.getInt("rows"));
 
         if (slots.contains(slot)) {
             int idx = (page * slots.size()) + slots.indexOf(slot);
             if (idx >= filtered.size()) return;
-
             String tid = filtered.get(idx);
             String display = tagsSec.getString(tid + ".display", tid);
 
-            // LOGIKA BARU: Cek jika tag yang diklik adalah tag yang sedang dipakai
             if (tid.equals(activeTag)) {
                 p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-                // Kamu bisa ganti pesannya langsung di sini atau ambil dari config
                 p.sendMessage(Utils.parse(p, "&aKamu sudah memakai tag ini!"));
-                return; // Stop eksekusi agar tidak memproses "Equip" lagi
+                return;
             }
 
-            // 1. JIKA SUDAH PUNYA AKSES
             if (checkAccess(p, tagsSec, tid, u)) {
                 plugin.getDbManager().setTag(p.getUniqueId(), tid);
                 p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK, 1f, 1.2f);
-                for (String s : plugin.getMsgsConfig().getStringList("messages.tag_equipped")) {
-                    p.sendMessage(Utils.parse(p, s.replace("%tag%", display)));
-                }
+                for (String s : plugin.getMsgsConfig().getStringList("messages.tag_equipped")) p.sendMessage(Utils.parse(p, s.replace("%tag%", display)));
                 renderGUI(p, page);
-            }
-            // 2. JIKA BELUM PUNYA DAN BERBAYAR
-// 2. JIKA BELUM PUNYA DAN BERBAYAR
-            else if (tagsSec.contains(tid + ".price")) {
+            } else if (tagsSec.contains(tid + ".price")) {
                 int pr = tagsSec.getInt(tid + ".price", 0);
                 double bal = Double.parseDouble(PlaceholderAPI.setPlaceholders(p, "%nexogems_balance%"));
-
-                if (bal >= pr) {
-                    // Perintah disesuaikan: nb withdraw <player> <price> Buy tag <tag>
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "nb withdraw " + p.getName() + " " + pr + " Buy tag " + tid);
-
-                    plugin.getDbManager().addUnlockedTag(p.getUniqueId(), tid);
-                    plugin.getDbManager().setTag(p.getUniqueId(), tid);
-
-                    for (String s : plugin.getMsgsConfig().getStringList("messages.buy_success")) {
-                        p.sendMessage(Utils.parse(p, s.replace("%tag%", display).replace("%price%", String.valueOf(pr))));
-                    }
-                    p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
-                    renderGUI(p, page);
-                } else {
+                if (bal >= pr) openConfirmationGUI(p, tid);
+                else {
                     p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-                    for (String s : plugin.getMsgsConfig().getStringList("messages.buy_failed")) {
-                        p.sendMessage(Utils.parse(p, s.replace("%missing%", String.valueOf(pr - bal))));
-                    }
+                    for (String s : plugin.getMsgsConfig().getStringList("messages.buy_failed")) p.sendMessage(Utils.parse(p, s.replace("%missing%", String.valueOf(pr - bal))));
                 }
-            }
-            // 3. JIKA TIDAK ADA PERMS
-            else {
+            } else {
                 p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
-                for (String s : plugin.getMsgsConfig().getStringList("messages.no_permission_tag")) {
-                    p.sendMessage(Utils.parse(p, s));
-                }
+                for (String s : plugin.getMsgsConfig().getStringList("messages.no_permission_tag")) p.sendMessage(Utils.parse(p, s));
             }
+        }
+    }
+
+    private void processPurchase(Player p, String tid) {
+        ConfigurationSection tagsSec = plugin.getTagsConfig().getConfigurationSection("tags");
+        int pr = tagsSec.getInt(tid + ".price", 0);
+        double bal = Double.parseDouble(PlaceholderAPI.setPlaceholders(p, "%nexogems_balance%"));
+        String display = tagsSec.getString(tid + ".display", tid);
+
+        if (bal >= pr) {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "nb withdraw " + p.getName() + " " + pr + " Buy tag " + tid);
+            plugin.getDbManager().addUnlockedTag(p.getUniqueId(), tid);
+            plugin.getDbManager().setTag(p.getUniqueId(), tid);
+            p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1f, 1.2f);
+            for (String s : plugin.getMsgsConfig().getStringList("messages.buy_success")) p.sendMessage(Utils.parse(p, s.replace("%tag%", display).replace("%price%", String.valueOf(pr))));
+            openGUI(p, 0);
+        } else {
+            p.playSound(p.getLocation(), Sound.ENTITY_VILLAGER_NO, 1f, 1f);
+            for (String s : plugin.getMsgsConfig().getStringList("messages.buy_failed")) p.sendMessage(Utils.parse(p, s.replace("%missing%", String.valueOf(pr - bal))));
         }
     }
 
     private void renderNavigation(Inventory inv, int page, int size, int ipp, ConfigurationSection s, Player p) {
         ConfigurationSection c = s.getConfigurationSection("controls.filter_hopper");
         int m = filterIndex.getOrDefault(p.getUniqueId(), 0);
-        String name; List<String> lore;
-        if (m == 1) { name = c.getString("name_owned"); lore = c.getStringList("lore_owned"); }
-        else if (m == 2) { name = c.getString("name_rarity_asc"); lore = c.getStringList("lore_rarity_asc"); }
-        else if (m == 3) { name = c.getString("name_rarity_desc"); lore = c.getStringList("lore_rarity_desc"); }
-        else { name = c.getString("name_all"); lore = c.getStringList("lore_all"); }
+        String n; List<String> l;
+        if (m == 1) { n = c.getString("name_owned"); l = c.getStringList("lore_owned"); }
+        else if (m == 2) { n = c.getString("name_rarity_asc"); l = c.getStringList("lore_rarity_asc"); }
+        else if (m == 3) { n = c.getString("name_rarity_desc"); l = c.getStringList("lore_rarity_desc"); }
+        else { n = c.getString("name_all"); l = c.getStringList("lore_all"); }
+        inv.setItem(c.getInt("slot"), Utils.createItem(p, c.getString("material"), n, l));
 
-        inv.setItem(c.getInt("slot"), Utils.createItem(p, c.getString("material"), name, lore));
         ConfigurationSection nav = s.getConfigurationSection("navigation");
         if (page > 0) inv.setItem(nav.getInt("previous_page.slot"), Utils.createItem(p, nav.getString("previous_page.material"), nav.getString("previous_page.name"), null));
         if ((page + 1) * ipp < size) inv.setItem(nav.getInt("next_page.slot"), Utils.createItem(p, nav.getString("next_page.material"), nav.getString("next_page.name"), null));
         inv.setItem(s.getInt("controls.close.slot"), Utils.createItem(p, s.getString("controls.close.material"), s.getString("controls.close.name"), null));
     }
 
-    // 1. Perbaikan logika akses: Jika harga 0, otomatis true
-    private boolean checkAccess(Player p, ConfigurationSection t, String k, List<String> u) {
-        // Jika player punya permission, langsung unlock
-        if (t.contains(k + ".permission") && p.hasPermission(t.getString(k + ".permission"))) return true;
-
-        // Jika di database sudah ada, langsung unlock
-        if (u.contains(k)) return true;
-
-        // FITUR BARU: Jika harga di config adalah 0, otomatis unlock
-        if (t.contains(k + ".price") && t.getInt(k + ".price") == 0) return true;
-
-        return false;
+    private List<String> getSortedKeys(Player p, ConfigurationSection t, List<String> u, int m) {
+        List<String> k = new ArrayList<>(t.getKeys(false));
+        if (m == 1) k.removeIf(id -> !checkAccess(p, t, id, u));
+        k.sort((a, b) -> {
+            int wA = plugin.getTagsConfig().getInt("rarities." + t.getString(a + ".rarity", "COMMON").toUpperCase() + ".weight", 0);
+            int wB = plugin.getTagsConfig().getInt("rarities." + t.getString(b + ".rarity", "COMMON").toUpperCase() + ".weight", 0);
+            int r = (m == 2) ? Integer.compare(wA, wB) : Integer.compare(wB, wA);
+            return (r != 0) ? r : a.compareToIgnoreCase(b);
+        });
+        return k;
     }
 
-    // 2. Perbaikan Lore: Supaya tidak muncul tulisan "KLIK UNTUK MEMBELI" pada barang gratis
+    private boolean checkAccess(Player p, ConfigurationSection t, String k, List<String> u) {
+        return (t.contains(k + ".permission") && p.hasPermission(t.getString(k + ".permission"))) || u.contains(k) || (t.getInt(k + ".price", -1) == 0);
+    }
+
     private List<String> getLoreTemplate(boolean active, boolean unlocked, ConfigurationSection t, String k, Player p) {
         ConfigurationSection d = plugin.getGuiConfig().getConfigurationSection("tag_display");
-
         if (active) return d.getStringList("lore_active");
-
-        // Jika sudah unlocked (termasuk yang harganya 0), pakai lore_unlocked
         if (unlocked) return d.getStringList("lore_unlocked");
-
-        if (t.contains(k + ".permission") && !p.hasPermission(t.getString(k + ".permission"))) {
-            return d.getStringList("lore_no_permission");
-        }
-
-        // Cek harga untuk menentukan lore beli
-        int price = t.getInt(k + ".price", 0);
+        if (t.contains(k + ".permission") && !p.hasPermission(t.getString(k + ".permission"))) return d.getStringList("lore_no_permission");
+        int pr = t.getInt(k + ".price", 0);
         double bal = Double.parseDouble(PlaceholderAPI.setPlaceholders(p, "%nexogems_balance%"));
-        return (bal >= price) ? d.getStringList("lore_locked_affordable") : d.getStringList("lore_locked_expensive");
+        return (bal >= pr) ? d.getStringList("lore_locked_affordable") : d.getStringList("lore_locked_expensive");
     }
 
     private List<String> processLore(List<String> temp, ConfigurationSection sec, String key, Player p) {
