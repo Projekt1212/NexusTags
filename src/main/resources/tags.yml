@@ -17,20 +17,128 @@ tags:
     price: 0
     description:
       - '&7 Tag gratis untuk player!'
+  FEMBOY:
+    display: <gradient:#FF9ECF:#FFFFFF:#A5F0FF>FEMBOY</gradient>
+    rarity: COMMON
+    icon: NAME_TAG
+    price: 0
+    description:
+      - '&7 Pakai tag ini untuk membuat mu lebih keren.'
+  FARMER:
+    display: <gradient:#80E66E:#A6E39A>FARMER</gradient>
+    rarity: COMMON
+    icon: NAME_TAG
+    price: 0
+    description:
+      - '&7 Pakai tag ini kalo kamu petani sejati.'
+  HUNTER:
+    display: <gradient:#E3D498:#A89E60>HUNTER</gradient>
+    rarity: COMMON
+    icon: NAME_TAG
+    price: 0
+    description:
+      - '&7 Tag untuk ia yang suka bertarung!'
+  MINER:
+    display: <gradient:#8A7443:#695D46>MINER</gradient>
+    rarity: COMMON
+    icon: NAME_TAG
+    price: 0
+    description:
+      - '&7 Tag untuk yang nolep mining.'
+  TERRA:
+    display: <gradient:#1D7A8A:#2A9AAD>TERRA</gradient>
+    rarity: COMMON
+    icon: NAME_TAG
+    price: 0
+    description:
+      - '&7 Tag untuk pemain Terra Realms.'
+  SPACE:
+    display: <gradient:#7B34A3:#6D1C9E>SPACE</gradient>
+    rarity: COMMON
+    icon: NAME_TAG
+    price: 0
+    description:
+      - '&7 Tag untuk pemain Space Realms.'
+  SLEEPER:
+    display: <gradient:#BDAA19:#E39656><b>SLEEPER</b></gradient>
+    rarity: COMMON
+    icon: NAME_TAG
+    price: 15
+    description:
+      - '&7 Kamu suka tidur? Tag ini cocok untukmu!'
   SAWIT:
     display: <gradient:#6CE32B:#69B541><b>SAWIT</b></gradient>
+    rarity: COMMON
+    icon: NAME_TAG
+    price: 15
+    description:
+      - '&7 Hanya untuk yang suka nyawit LOL'
+  NXS1:
+    display: <gradient:#C056E3:#A33AC7><b>NXS1</b></gradient>
+    rarity: FANCY
+    icon: NAME_TAG
+    price: 15
+    description:
+      - '&7 Tag ini merupakan tag &dNexusOne&7! Beli menggunakan'
+      - '&7 &dNexusBits &7untuk unlock tag ini!'
+  EVERYDAY:
+    display: <gradient:#D9AF48:#C7AB65><b>EVERYDAY</b></gradient>
+    rarity: FANCY
+    icon: NAME_TAG
+    permission: tags.EVERYDAY
+    description:
+      - '&7 Kerjakan Daily Quests hingga &aLvl &lVII &7untuk'
+      - '&7 mendapatkan akses tag ini!'
+  SPEEDRUN:
+    display: <gradient:#E36236:#E67C57><b>SPEEDRUN</b></gradient>
+    rarity: FANCY
+    icon: NAME_TAG
+    permission: tags.SPEEDRUN
+    description:
+      - '&7 Kerjakan Global Quests hingga &aLvl &lVII &7untuk'
+      - '&7 mendapatkan akses tag ini!'
+  STAR:
+    display: <gradient:#E64919:#E0613A>[<b>✪</b>]</gradient>
+    rarity: FANCY
+    icon: NAME_TAG
+    price: 15
+    description:
+      - '&7 Tag ini dapat dibeli menggunakan &dNexusBits&7!'
+  SPARK:
+    display: <gradient:#118F9C:#49CFDE>[<b>✦</b>]</gradient>
+    rarity: FANCY
+    icon: NAME_TAG
+    price: 15
+    description:
+      - '&7 Tag ini dapat dibeli menggunakan &dNexusBits&7!'
+  PEN:
+    display: <gradient:#5295F2:#6F96D1>[<b>✐</b>]</gradient>
+    rarity: FANCY
+    icon: NAME_TAG
+    price: 15
+    description:
+      - '&7 Tag ini dapat dibeli menggunakan &dNexusBits&7!'
+  No_Mercy:
+    display: <gradient:#E0B48D:#EBB27F>NO MERCY</gradient>
     rarity: FANCY
     icon: NAME_TAG
     price: 50
     description:
-      - <gray> Panen sawit</gray>
+      - '&7 Tag ini dapat dibeli menggunakan &dNexusBits&7!'
+  DONATOR:
+    display: <gradient:#6F96D1:#AAC6F0><b>DONATOR</b></gradient>
+    rarity: FANCY
+    icon: NAME_TAG
+    permission: group.fey
+    description:
+      - '&7 Tag ini bisa didapatkan melalui top up Rank&7!'
   CAV+++:
     display: <gradient:gold:yellow>CAV+++</gradient>
     rarity: DIVINE
     icon: NAME_TAG
     permission: test.CAV+++
     description:
-      - <yellow> Tag khusus owner tercinta kita yaitu Cavry</yellow>
+      - '&e Tag khusus owner tercinta kita yaitu Cavry'
   Top_1_Vote:
     display: <gradient:#54C7B5:#29E3C5><b>TOP </b>#1 <b>VOTE</b></gradient>
     rarity: DIVINE
@@ -39,3 +147,10 @@ tags:
     description:
       - '&7 Tag ini hanya untuk player yang mencapai'
       - '&7 Top 1 Vote bulanan NexusOne!'
+  KING:
+    display: <gradient:#D6513E:#E67F6E>KING</gradient>
+    rarity: DIVINE
+    icon: NAME_TAG
+    permission: group.owner
+    description:
+      - '&7 Gelar hanya untuk raja.'
