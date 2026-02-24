@@ -36,12 +36,28 @@ public class Utils {
 
     public static Component parse(String text) { return parse(null, text); }
 
+    // Ganti isi Utils.java dengan ini
     public static String applyLegacy(Player player, String text) {
         if (text == null) return "";
+        // Hanya memproses warna dan PlaceholderAPI biasa
+        return sectionSerializer.serialize(parse(player, text));
+    }
+
+    public static String applyChatFormat(Player player, String tagDisplay) {
+        if (tagDisplay == null) return "";
+
+        // Ambil format simulasi chat dari messages.yml
+        String format = NexusTags.getInstance().getMsgsConfig().getString("messages.display_tag_format", "{prefix} &7%player% %tag%");
+
         String prefix = (player != null) ? PlaceholderAPI.setPlaceholders(player, "%vault_prefix%") : "";
         String playerName = (player != null) ? player.getName() : "Player";
-        String replaced = text.replace("{prefix}", prefix).replace("%player%", playerName);
-        return sectionSerializer.serialize(parse(player, replaced));
+
+        // Bungkus tag display ke dalam format chat
+        String replaced = format.replace("{prefix}", prefix)
+                .replace("%player%", playerName)
+                .replace("%tag%", tagDisplay);
+
+        return applyLegacy(player, replaced);
     }
 
     public static ItemStack createItem(Player player, String mat, String name, List<String> lore) {
