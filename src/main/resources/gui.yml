@@ -1,165 +1,169 @@
 gui:
-  title: "&8ᴛᴀɢ ᴍᴇɴᴜ%page_format%"
-  page_format: " &8- ʜᴀʟᴀᴍᴀɴ %page%"
+  title: '&8ᴛᴀɢ ᴍᴇɴᴜ%page_format%'
+  page_format: ' &8- ʜᴀʟᴀᴍᴀɴ %page%'
   update_interval: 20
   rows: 6
   start_slot: 10
   end_slot: 43
 
   filler:
-    material: "BLACK_STAINED_GLASS_PANE"
-    name: " "
+    material: BLACK_STAINED_GLASS_PANE
+    name: ' '
     enabled: true
 
   navigation:
     next_page:
       slot: 50
-      material: "ARROW"
-      name: "&a&lʜᴀʟᴀᴍᴀɴ ʙᴇʀɪᴋᴜᴛɴʏᴀ"
+      material: ARROW
+      name: '&a&lʜᴀʟᴀᴍᴀɴ ʙᴇʀɪᴋᴜᴛɴʏᴀ'
       lore: []
     previous_page:
       slot: 48
-      material: "ARROW"
-      name: "&a&lʜᴀʟᴀᴍᴀɴ sᴇʙᴇʟᴜᴍɴʏᴀ"
+      material: ARROW
+      name: '&a&lʜᴀʟᴀᴍᴀɴ sᴇʙᴇʟᴜᴍɴʏᴀ'
       lore: []
 
   controls:
     close:
       slot: 49
-      material: "BARRIER"
-      name: "&cᴄʟᴏsᴇ"
+      material: BARRIER
+      name: '&cᴄʟᴏsᴇ'
       lore: []
     filter_hopper:
-      material: "HOPPER"
+      material: HOPPER
       slot: 51
       # Mode 1: Semua Tag
-      name_all: "&eFilter: &fSEMUA TAG"
+      name_all: '&fFilter: &aSemua Tag'
       lore_all:
-        - "&8ᴛᴏɢɢʟᴇ"
-        - ""
-        - "&2&l > &aSemua Tag"
-        - "&7 > Dimiliki"
-        - "&7 > Rarity Terendah"
-        - "&7 > Rarity Tertinggi"
-        - ""
-        - "&e ᴋʟɪᴋ ᴜɴᴛᴜᴋ ɢᴀɴᴛɪ ᴛᴏɢɢʟᴇ!"
+        - '&8ᴛᴏɢɢʟᴇ'
+        - ''
+        - '&2&l > &aSemua Tag'
+        - '&7 > Dimiliki'
+        - '&7 > Rarity Terendah'
+        - '&7 > Rarity Tertinggi'
+        - ''
+        - '&e ᴋʟɪᴋ ᴜɴᴛᴜᴋ ɢᴀɴᴛɪ ᴛᴏɢɢʟᴇ!'
+        - ''
 
       # Mode 2: Dimiliki
-      name_owned: "&eFilter: &bDIMILIKI"
+      name_owned: '&fFilter: &aDimiliki'
       lore_owned:
-        - "&8ᴛᴏɢɢʟᴇ"
-        - ""
-        - "&7 > Semua Tag"
-        - "&2&l > &aDimiliki"
-        - "&7 > Rarity Terendah"
-        - "&7 > Rarity Tertinggi"
-        - ""
-        - "&e ᴋʟɪᴋ ᴜɴᴛᴜᴋ ɢᴀɴᴛɪ ᴛᴏɢɢʟᴇ!"
+        - '&8ᴛᴏɢɢʟᴇ'
+        - ''
+        - '&7 > Semua Tag'
+        - '&2&l > &aDimiliki'
+        - '&7 > Rarity Terendah'
+        - '&7 > Rarity Tertinggi'
+        - ''
+        - '&e ᴋʟɪᴋ ᴜɴᴛᴜᴋ ɢᴀɴᴛɪ ᴛᴏɢɢʟᴇ!'
+        - ''
 
       # Mode 3: Rarity Terendah
-      name_rarity_asc: "&eFilter: &fRarity Terendah"
+      name_rarity_asc: '&fFilter: &aRarity Terendah'
       lore_rarity_asc:
-        - "&8ᴛᴏɢɢʟᴇ"
-        - ""
-        - "&7 > Semua Tag"
-        - "&7 > Dimiliki"
-        - "&2&l > &aRarity Terendah"
-        - "&7 > Rarity Tertinggi"
-        - ""
-        - "&e ᴋʟɪᴋ ᴜɴᴛᴜᴋ ɢᴀɴᴛɪ ᴛᴏɢɢʟᴇ!"
+        - '&8ᴛᴏɢɢʟᴇ'
+        - ''
+        - '&7 > Semua Tag'
+        - '&7 > Dimiliki'
+        - '&2&l > &aRarity Terendah'
+        - '&7 > Rarity Tertinggi'
+        - ''
+        - '&e ᴋʟɪᴋ ᴜɴᴛᴜᴋ ɢᴀɴᴛɪ ᴛᴏɢɢʟᴇ!'
+        - ''
 
       # Mode 4: Rarity Tertinggi
-      name_rarity_desc: "&eFilter: &dRarity Tertinggi"
+      name_rarity_desc: '&fFilter: &aRarity Tertinggi'
       lore_rarity_desc:
-        - "&8ᴛᴏɢɢʟᴇ"
-        - ""
-        - "&7 > Semua Tag"
-        - "&7 > Dimiliki"
-        - "&7 > Rarity Terendah"
-        - "&2&l > &aRarity Tertinggi"
-        - ""
-        - "&e ᴋʟɪᴋ ᴜɴᴛᴜᴋ ɢᴀɴᴛɪ ᴛᴏɢɢʟᴇ!"
+        - '&8ᴛᴏɢɢʟᴇ'
+        - ''
+        - '&7 > Semua Tag'
+        - '&7 > Dimiliki'
+        - '&7 > Rarity Terendah'
+        - '&2&l > &aRarity Tertinggi'
+        - ''
+        - '&e ᴋʟɪᴋ ᴜɴᴛᴜᴋ ɢᴀɴᴛɪ ᴛᴏɢɢʟᴇ!'
+        - ''
 
   items:
     player_info:
       slot: 4
-      material: "BOOK"
-      name: "&a&lInformasi Kamu     "
+      material: BOOK
+      name: '&a&lInformasi Kamu     '
       lore:
-        - "&8ɪɴғᴏʀᴍᴀᴛɪᴏɴ"
-        - ""
-        - "&f Nama: &7%player_name%"
-        - "&f Tag Aktif: &a%nexustags_active_formatted%"
-        - "&f Dimiliki: &a%nexustags_unlocked_tag_formatted% tags"
-        - "&f NexusBits: &d%nexogems_formatted% NexusBits"
-        - ""
-        - "&7 Ingin membeli &dNexusBits&7? Kamu bisa membeli"
-        - "&7 di &dstore.nexusone.fun&7!"
-        - ""
+        - '&8ɪɴғᴏʀᴍᴀᴛɪᴏɴ'
+        - ''
+        - '&f Nama: &7%player_name%'
+        - '&f Tag Aktif: &a%nexustags_active_formatted%'
+        - '&f Punya: &a%nexustags_unlocked_tag% tags'
+        - '&f NexusBits: &d%nexogems_formatted% NexusBits'
+        - ''
+        - '&7 Ingin membeli &dNexusBits&7? Kamu bisa membeli'
+        - '&7 di &dstore.nexusone.fun&7!'
+        - ''
 
 tag_display:
-  locked_material: "BARRIER"
+  locked_material: BARRIER
   lore_active:
-    - "&8ᴛᴀɢ"
-    - ""
-    - "%description%"
-    - ""
-    - "&7 Display Tag:"
-    - "%preview%"
-    - ""
-    - "&7 Rarity: %rarity%"
-    - ""
-    - "&a ᴋᴀᴍᴜ sᴇᴅᴀɴɢ ᴍᴇɴɢɢᴜɴᴀᴋᴀɴ ᴛᴀɢ ɪɴɪ!"
-    - ""
+    - '&8ᴛᴀɢ'
+    - ''
+    - '%description%'
+    - ''
+    - '&7 Display Tag:'
+    - '%preview%'
+    - ''
+    - '&7 Rarity: %rarity%'
+    - ''
+    - '&a ᴋᴀᴍᴜ sᴇᴅᴀɴɢ ᴍᴇɴɢɢᴜɴᴀᴋᴀɴ ᴛᴀɢ ɪɴɪ!'
+    - ''
   lore_unlocked:
-    - "&8ᴛᴀɢ"
-    - ""
-    - "%description%"
-    - ""
-    - "&7 Display Tag:"
-    - "%preview%"
-    - ""
-    - "&7 Rarity: %rarity%"
-    - ""
-    - "&e ᴋʟɪᴋ ᴜɴᴛᴜᴋ ᴍᴇɴɢɢᴜɴᴀᴋᴀɴ ᴛᴀɢ ɪɴɪ!"
-    - ""
+    - '&8ᴛᴀɢ'
+    - ''
+    - '%description%'
+    - ''
+    - '&7 Display Tag:'
+    - '%preview%'
+    - ''
+    - '&7 Rarity: %rarity%'
+    - ''
+    - '&e ᴋʟɪᴋ ᴜɴᴛᴜᴋ ᴍᴇɴɢɢᴜɴᴀᴋᴀɴ ᴛᴀɢ ɪɴɪ!'
+    - ''
   lore_locked_affordable:
-    - "&8ᴛᴀɢ"
-    - ""
-    - "%description%"
-    - ""
-    - "&7 Display Tag:"
-    - "%preview%"
-    - ""
-    - "&7 Rarity: %rarity%"
-    - ""
-    - "&7 Harga: &d%price% NexusBits"
-    - ""
-    - " &eᴋʟɪᴋ ᴜɴᴛᴜᴋ ᴍᴇᴍʙᴇʟɪ ᴛᴀɢ ɪɴɪ!"
-    - ""
+    - '&8ᴛᴀɢ'
+    - ''
+    - '%description%'
+    - ''
+    - '&7 Display Tag:'
+    - '%preview%'
+    - ''
+    - '&7 Rarity: %rarity%'
+    - ''
+    - '&7 Harga: &d%price% NexusBits'
+    - ''
+    - ' &eᴋʟɪᴋ ᴜɴᴛᴜᴋ ᴍᴇᴍʙᴇʟɪ ᴛᴀɢ ɪɴɪ!'
+    - ''
   lore_locked_expensive:
-    - "&8ᴛᴀɢ"
-    - ""
-    - "%description%"
-    - ""
-    - "&7 Display Tag:"
-    - "%preview%"
-    - ""
-    - "&7 Rarity: %rarity%"
-    - ""
-    - "&7 Harga: &d%price% NexusBits"
-    - ""
-    - " &cᴋᴀᴍᴜ ᴛɪᴅᴀᴋ ᴍᴇᴍɪʟɪᴋɪ ɴᴇxᴜsʙɪᴛs ʏᴀɴɢ ᴄᴜᴋᴜᴘ!"
-    - ""
+    - '&8ᴛᴀɢ'
+    - ''
+    - '%description%'
+    - ''
+    - '&7 Display Tag:'
+    - '%preview%'
+    - ''
+    - '&7 Rarity: %rarity%'
+    - ''
+    - '&7 Harga: &d%price% NexusBits'
+    - ''
+    - ' &cᴋᴀᴍᴜ ᴛɪᴅᴀᴋ ᴍᴇᴍɪʟɪᴋɪ ɴᴇxᴜsʙɪᴛs ʏᴀɴɢ ᴄᴜᴋᴜᴘ!'
+    - ''
   lore_no_permission:
-    - "&8ᴛᴀɢ"
-    - ""
-    - "%description%"
-    - ""
-    - "&7 Display Tag:"
-    - "%preview%"
-    - ""
-    - "&7 Rarity: %rarity%"
-    - ""
-    - " &cᴋᴀᴍᴜ ᴛɪᴅᴀᴋ ʙɪsᴀ ᴍᴇɴɢɢᴜɴᴀᴋᴀɴ ᴛᴀɢ ɪɴɪ!"
-    - ""
+    - '&8ᴛᴀɢ'
+    - ''
+    - '%description%'
+    - ''
+    - '&7 Display Tag:'
+    - '%preview%'
+    - ''
+    - '&7 Rarity: %rarity%'
+    - ''
+    - '&c ᴋᴀᴍᴜ ᴛɪᴅᴀᴋ ʙɪsᴀ ᴍᴇɴɢɢᴜɴᴀᴋᴀɴ ᴛᴀɢ ɪɴɪ!'
+    - ''
