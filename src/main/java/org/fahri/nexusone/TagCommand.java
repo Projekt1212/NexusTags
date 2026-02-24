@@ -1,4 +1,4 @@
-package org.fahri.nexusone.NexusTags;
+package org.fahri.nexusone;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
@@ -41,6 +41,35 @@ public class TagCommand implements CommandExecutor, TabCompleter {
         // 2. Perintah /tag help
         if (args[0].equalsIgnoreCase("help")) {
             sendMsg(sender, "messages.usage_help");
+            return true;
+        }
+
+        if (args[0].equalsIgnoreCase("create") || args[0].equalsIgnoreCase("edit")) {
+            if (!(sender instanceof Player)) return true;
+            if (args.length < 2) {
+                sender.sendMessage(Utils.parse("&cFormat: /tag " + args[0] + " <tagId>"));
+                return true;
+            }
+
+            Player p = (Player) sender;
+            String tid = args[1];
+
+            TagEditorSession session = plugin.getEditorSessions().get(p.getUniqueId());
+
+            if (session == null || !session.tagId.equals(tid)) {
+                session = new TagEditorSession(tid);
+                // Jika mode edit, ambil data lama
+                if (args[0].equalsIgnoreCase("edit") && plugin.getTagsConfig().contains("tags." + tid)) {
+                    session.display = plugin.getTagsConfig().getString("tags." + tid + ".display");
+                    session.price = plugin.getTagsConfig().getInt("tags." + tid + ".price", 0);
+                    session.permission = plugin.getTagsConfig().getString("tags." + tid + ".permission", "");
+                    session.icon = plugin.getTagsConfig().getString("tags." + tid + ".icon", "PAPER");
+                    session.description = plugin.getTagsConfig().getStringList("tags." + tid + ".description");
+                }
+                plugin.getEditorSessions().put(p.getUniqueId(), session);
+            }
+
+            new GUIListener(plugin).openTagEditor(p, session);
             return true;
         }
 
@@ -180,6 +209,8 @@ public class TagCommand implements CommandExecutor, TabCompleter {
                 subs.add("unlock");
                 subs.add("remove");
                 subs.add("dbmigrate"); // Tab complete untuk fitur baru
+                subs.add("create");
+                subs.add("edit");
             }
             return subs.stream().filter(s -> s.toLowerCase().startsWith(args[0].toLowerCase())).collect(Collectors.toList());
         }

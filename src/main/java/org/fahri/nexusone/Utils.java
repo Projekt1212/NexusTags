@@ -1,4 +1,4 @@
-package org.fahri.nexusone.NexusTags;
+package org.fahri.nexusone;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
@@ -36,10 +36,8 @@ public class Utils {
 
     public static Component parse(String text) { return parse(null, text); }
 
-    // Ganti isi Utils.java dengan ini
     public static String applyLegacy(Player player, String text) {
         if (text == null) return "";
-        // Hanya memproses warna dan PlaceholderAPI biasa
         return sectionSerializer.serialize(parse(player, text));
     }
 

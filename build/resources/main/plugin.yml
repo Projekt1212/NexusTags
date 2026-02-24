@@ -1,6 +1,6 @@
 name: NexusTags
 version: '1.0'
-main: org.fahri.nexusone.NexusTags.NexusTags
+main: org.fahri.nexusone.NexusTags
 api-version: '1.21'
 author: JektDIVI
 commands:

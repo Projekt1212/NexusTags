@@ -1,8 +1,9 @@
-package org.fahri.nexusone.NexusTags;
+package org.fahri.nexusone;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -100,6 +101,28 @@ public class GUIListener implements Listener, InventoryHolder {
         inv.setItem(conf.getInt("cancel.slot"), Utils.createItem(player, conf.getString("cancel.material"), conf.getString("cancel.name"), conf.getStringList("cancel.lore")));
 
         pendingPurchase.put(player.getUniqueId(), tagId);
+        player.openInventory(inv);
+    }
+
+    public void openTagEditor(Player player, TagEditorSession session) {
+        Inventory inv = Bukkit.createInventory(null, 36, Utils.parse("&0Editor: " + session.tagId));
+
+        // Item Preview
+        inv.setItem(13, Utils.createItem(player, session.icon, session.display, session.description));
+
+        // Tombol Edit Display
+        inv.setItem(10, Utils.createItem(player, "NAME_TAG", "&eUbah Display", List.of("&7Sekarang: " + session.display)));
+
+        // Tombol Edit Price
+        inv.setItem(11, Utils.createItem(player, "GOLD_INGOT", "&eUbah Harga", List.of("&7Sekarang: " + session.price, "&8(-1 untuk hanya perm)")));
+
+        // Tombol Edit Permission
+        inv.setItem(12, Utils.createItem(player, "BARRIER", "&eUbah Permission", List.of("&7Sekarang: " + session.permission, "&8(Kosongkan untuk hanya harga)")));
+
+        // Tombol Simpan & Buang
+        inv.setItem(30, Utils.createItem(player, "RED_WOOL", "&cDiscard Changes", null));
+        inv.setItem(32, Utils.createItem(player, "LIME_WOOL", "&aConfirm & Save", null));
+
         player.openInventory(inv);
     }
 
@@ -284,6 +307,24 @@ public class GUIListener implements Listener, InventoryHolder {
                 inv.setItem(it.getInt("slot"), Utils.createItem(p, it.getString("material"), it.getString("name"), it.getStringList("lore")));
             }
         }
+    }
+
+    private void saveTagToConfig(TagEditorSession s) {
+        FileConfiguration cfg = plugin.getTagsConfig();
+        String path = "tags." + s.tagId;
+        cfg.set(path + ".display", s.display);
+        cfg.set(path + ".icon", s.icon);
+        cfg.set(path + ".description", s.description.isEmpty() ? List.of("&7Default description") : s.description);
+        cfg.set(path + ".rarity", s.rarity);
+
+        if (s.price == -1) cfg.set(path + ".price", null);
+        else cfg.set(path + ".price", s.price);
+
+        if (s.permission.isEmpty()) cfg.set(path + ".permission", null);
+        else cfg.set(path + ".permission", s.permission);
+
+        plugin.getConfigManager().saveTagsConfig();
+        plugin.reloadPlugin();
     }
 
     private boolean isEdgeSlot(int s, int r) { int c = s % 9; int row = s / 9; return c == 0 || c == 8 || row == 0 || row == r - 1; }

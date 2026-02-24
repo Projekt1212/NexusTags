@@ -1,4 +1,4 @@
-package org.fahri.nexusone.NexusTags;
+package org.fahri.nexusone;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -14,7 +14,8 @@ public class DatabaseManager {
         setupDatabase();
     }
 
-    private void setupDatabase() {
+    public void setupDatabase() {
+        // Mengambil data dari config.yml asli
         String host = plugin.getConfig().getString("database.host", "localhost");
         int port = plugin.getConfig().getInt("database.port", 3306);
         String dbName = plugin.getConfig().getString("database.database", "nexus_tags");
@@ -25,23 +26,29 @@ public class DatabaseManager {
         config.setJdbcUrl("jdbc:mysql://" + host + ":" + port + "/" + dbName);
         config.setUsername(user);
         config.setPassword(pass);
+
+        // Optimasi HikariCP asli Anda
         config.addDataSourceProperty("cachePrepStmts", "true");
         config.addDataSourceProperty("prepStmtCacheSize", "250");
         config.addDataSourceProperty("prepStmtCacheSqlLimit", "2048");
+        config.setMaximumPoolSize(10);
 
-        this.ds = new HikariDataSource(config);
-
-        try (Connection conn = ds.getConnection();
-             PreparedStatement st1 = conn.prepareStatement("CREATE TABLE IF NOT EXISTS nexustags_unlocked (uuid VARCHAR(36), tag_id VARCHAR(64), PRIMARY KEY(uuid, tag_id))");
-             PreparedStatement st2 = conn.prepareStatement("CREATE TABLE IF NOT EXISTS nexustags_active (uuid VARCHAR(36) PRIMARY KEY, tag_id VARCHAR(64))");
-             PreparedStatement st3 = conn.prepareStatement("CREATE TABLE IF NOT EXISTS nexustags_configs (config_name VARCHAR(64) PRIMARY KEY, content LONGTEXT)")) {
-            st1.execute();
-            st2.execute();
-            st3.execute();
-        } catch (SQLException e) { e.printStackTrace(); }
+        try {
+            this.ds = new HikariDataSource(config);
+            try (Connection conn = ds.getConnection();
+                 Statement st = conn.createStatement()) {
+                // Tabel asli sesuai kode GitHub Anda
+                st.execute("CREATE TABLE IF NOT EXISTS nexustags_unlocked (uuid VARCHAR(36), tag_id VARCHAR(64), PRIMARY KEY(uuid, tag_id))");
+                st.execute("CREATE TABLE IF NOT EXISTS nexustags_active (uuid VARCHAR(36) PRIMARY KEY, tag_id VARCHAR(64))");
+                st.execute("CREATE TABLE IF NOT EXISTS nexustags_configs (config_name VARCHAR(64) PRIMARY KEY, content LONGTEXT)");
+            }
+            plugin.getLogger().info("Database MySQL berhasil tersambung!");
+        } catch (Exception e) {
+            plugin.getLogger().severe("Gagal menyambung ke database! Periksa config.yml Anda.");
+            e.printStackTrace();
+        }
     }
 
-    // FIX: Menambahkan metode yang hilang untuk menghapus tag
     public void removeUnlockedTag(UUID uuid, String tagId) {
         try (Connection conn = ds.getConnection();
              PreparedStatement st = conn.prepareStatement("DELETE FROM nexustags_unlocked WHERE uuid = ? AND tag_id = ?")) {
